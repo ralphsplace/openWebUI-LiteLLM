@@ -1,0 +1,46 @@
+model_list:
+  - model_name: fast-chat
+    litellm_params:
+      model: ollama/mistral:latest
+      api_base: os.environ/OLLAMA_SRC1
+
+  - model_name: coder
+    litellm_params:
+      model: ollama/deepseek-coder:latest
+      api_base: os.environ/OLLAMA_SRC1
+
+  - model_name: general
+    litellm_params:
+      model: ollama/llama3:8b
+      api_base: os.environ/OLLAMA_SRC2
+
+  - model_name: large-general
+    litellm_params:
+      model: ollama/glm-4.7-flash:latest
+      api_base: os.environ/OLLAMA_SRC2
+
+  - model_name: compact
+    litellm_params:
+      model: ollama/gemma3:4b
+      api_base: os.environ/OLLAMA_SRC2
+      
+search_tools:
+  - search_tool_name: brave-search
+    litellm_params:
+      search_provider: brave
+      api_key: os.environ/BRAVE_API_KEY      
+
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 3
+  timeout: 120
+
+litellm_settings:
+  cache: true
+  cache_params:
+    type: redis
+    host: redis
+    port: 6379
+    
+general_settings: 
+  master_key: os.environ/LITELLM_API_KEY
