@@ -39,8 +39,6 @@ services:
     container_name: litellm
     restart: unless-stopped
     command: ["--config", "/app/config.yaml", "--port", "4000", "--host", "0.0.0.0"]
-    volumes:
-      - ./litellm_config.yaml:/app/config.yaml:ro
     ports:
       - "4000:4000"
     extra_hosts:
@@ -51,9 +49,16 @@ services:
       REDIS_PORT: 6379
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
       STORE_MODEL_IN_DB: true
+      OLLAMA_SRC1: ${OLLAMA_SRC1}
+      OLLAMA_SRC2: ${OLLAMA_SRC2}
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       LITELLM_API_KEY: ${LITELLM_API_KEY}
       LITELLM_LOG: DEBUG
+      SSL_CERT_FILE: /usr/local/share/ca-certificates/local-ca.pem
+      REQUESTS_CA_BUNDLE: /usr/local/share/ca-certificates/local-ca.pem      
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+      - ./certs/local-ca.pem:/usr/local/share/ca-certificates/local-ca.pem:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,6 +87,9 @@ services:
       WEBUI_AUTH: true
       ENABLE_OLLAMA_API: false
       ENABLE_OPENAI_API: true
+      ENABLE_WEB_SEARCH: true
+      WEB_SEARCH_ENGINE: brave
+      WEB_SEARCH_API_KEY: ${BRAVE_API_KEY}
     volumes:
       - openwebui_data:/app/backend/data
     depends_on:
@@ -96,10 +104,30 @@ services:
     networks:
       - ai_stack
       
+  open-terminal:
+    image: ghcr.io/open-webui/open-terminal:slim
+    container_name: open-terminal
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"        
+    volumes:
+      - open_terminal:/home/user
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/ >/dev/null 2>&1 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - ai_stack
+      
 volumes:
   postgres_data:
   redis_data:
   openwebui_data:
+  open_terminal:
 
 networks:
   ai_stack:
